@@ -18,14 +18,13 @@ function setupServer(ringBuffer, opts) {
     streams: [{type: 'raw', stream: ringBuffer}],
     version: opts.version
   });
-  app.use(loggingContext.attachTimeToReq);
   app.use(loggingContext.attachLoggerToReq);
-  app.use(
-    loggingContext.attachRequestIdToReq({
-      warnIfMissingRequestId: opts.warnIfMissingRequestId
-    })
-  );
   app.use(loggingContext.logResponses);
+  app.use(function(req, res, next) {
+    req.foo = 'bar';
+    next();
+  });
+  app.use(loggingContext.attachToLogger('foo'));
   app.get('/', function(req, res) {
     res.end();
   });
@@ -68,28 +67,6 @@ describe('logging', function() {
       });
   });
 
-  it('should warn if missing request id if configured to do so', function() {
-    var ringBuffer = createRingBuffer();
-    return request(setupServer(ringBuffer, {warnIfMissingRequestId: true}))
-      .get('/')
-      .then(function() {
-        var firstRecord = ringBuffer.records[0];
-        assert.equal(firstRecord.msg, 'X-Request-ID header not present');
-        assert.ok(firstRecord.requestId);
-      });
-  });
-
-  it('should not warn if request id is present', function() {
-    var ringBuffer = createRingBuffer();
-    return request(setupServer(ringBuffer, {warnIfMissingRequestId: true}))
-      .get('/')
-      .set('X-Request-ID', 'junk')
-      .then(function() {
-        var firstRecord = ringBuffer.records[0];
-        assert.notEqual(firstRecord.msg, 'X-Request-ID header not present');
-      });
-  });
-
   it('should add additional specified serializers', function() {
     var ringBuffer = createRingBuffer();
     return request(setupServer(ringBuffer, {serializers: {req: function() {
@@ -97,6 +74,14 @@ describe('logging', function() {
     }}})).get('/')
       .then(function() {
         assert.ok(ringBuffer.records[0].req, 'bar');
+      });
+  });
+
+  it('should add things to logger', function() {
+    var ringBuffer = createRingBuffer();
+    return request(setupServer(ringBuffer)).get('/')
+      .then(function() {
+        assert.equal(ringBuffer.records[0].foo, 'bar');
       });
   });
 });
