@@ -18,6 +18,7 @@ function setupServer(ringBuffer, opts) {
     streams: [{type: 'raw', stream: ringBuffer}],
     version: opts.version
   });
+  app.use(loggingContext.attachTimeToReq);
   app.use(loggingContext.attachLoggerToReq);
   app.use(
     loggingContext.attachRequestIdToReq({

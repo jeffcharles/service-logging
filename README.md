@@ -16,6 +16,7 @@ var express = require('express'),
   });
 
 var app = express();
+app.use(logging.attachTimeToReq);
 app.use(logging.attachLoggerToReq);
 app.use(logging.attachRequestIdToReq());
 app.use(logging.logResponses);

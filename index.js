@@ -12,7 +12,7 @@ var _ = require('lodash'),
  * @param {Object} [opts.serializers] - Serializers for Bunyan
  * @param {Object[]} opts.streams - Bunyan streams for logging
  * @param {Object} [opts.version] - A version object
- * @return {{attachLoggerToReq: function, attachRequestIdToReq: function, logErrors: function, logResponses: function}} A series of middleware functions. Add in order: attachLoggerToReq, attachRequestIdToReq, logResponses, logErrors
+ * @return {{attachLoggerToReq: function, attachRequestIdToReq: function, attachTimeToReq: function, logErrors: function, logResponses: function}} A series of middleware functions. Add in order: attachTimeToReq, attachLoggerToReq, attachRequestIdToReq, logResponses, logErrors
  */
 module.exports = function(opts) {
   if (!opts) {
@@ -92,13 +92,20 @@ module.exports = function(opts) {
         next();
       };
     },
+    attachTimeToReq: function attachTimeToReq(req, res, next) {
+      req.startTime = Date.now();
+      next();
+    },
     logErrors: function errorLogger(err, req, res, next) {
       req.logger.error({req: req, err: err}, 'Error');
       next();
     },
     logResponses: function responseLogger(req, res, next) {
       res.on('finish', function() {
-        req.logger.info({req: req, res: res}, 'Response finished');
+        req.logger.info(
+          {req: req, res: res, responseTimeMS: Date.now() - req.startTime},
+          'Response finished'
+        );
       });
       next();
     }
