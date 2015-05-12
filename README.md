@@ -1,5 +1,7 @@
 # Service Logging
 
+[![NPM](https://nodei.co/npm/service-logging.png)](https://nodei.co/npm/service-logging/)
+
 [![Build Status](https://travis-ci.org/jeffcharles/service-logging.svg?branch=master)](https://travis-ci.org/jeffcharles/service-logging)
 
 Does some logging bootstrapping with Bunyan and basic serializers and exposes Connect middleware to wire up logging in a service.
