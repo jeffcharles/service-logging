@@ -98,7 +98,7 @@ module.exports = function(opts) {
     },
     logErrors: function errorLogger(err, req, res, next) {
       req.logger.error({req: req, err: err}, 'Error');
-      next();
+      next(err);
     },
     logResponses: function responseLogger(req, res, next) {
       res.on('finish', function() {
