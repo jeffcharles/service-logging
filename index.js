@@ -1,7 +1,6 @@
 var _ = require('lodash'),
   bunyan = require('bunyan'),
-  Errio = require('errio'),
-  uuid = require('node-uuid');
+  Errio = require('errio');
 
 /**
  * Creates a logging context
@@ -12,7 +11,7 @@ var _ = require('lodash'),
  * @param {Object} [opts.serializers] - Serializers for Bunyan
  * @param {Object[]} opts.streams - Bunyan streams for logging
  * @param {Object} [opts.version] - A version object
- * @return {{attachLoggerToReq: function, attachRequestIdToReq: function, attachTimeToReq: function, logErrors: function, logResponses: function}} A series of middleware functions. Add in order: attachTimeToReq, attachLoggerToReq, attachRequestIdToReq, logResponses, logErrors
+ * @return {{attachLoggerToReq: function, attachToLogger: function, logErrors: function, logResponses: function}}
  */
 module.exports = function(opts) {
   if (!opts) {
@@ -79,22 +78,13 @@ module.exports = function(opts) {
       req.logger = logger;
       next();
     },
-    attachRequestIdToReq: function(reqIdOpts) {
-      reqIdOpts = reqIdOpts || {};
-      return function requestId(req, res, next) {
-        var requestIdHeader = req.headers['x-request-id'];
-        req.requestId = requestIdHeader || uuid.v4();
-        req.logger = req.logger.child({requestId: req.requestId});
-        if (reqIdOpts.warnIfMissingRequestId && !requestIdHeader) {
-          req.logger.warn('X-Request-ID header not present');
-        }
-        res.setHeader('X-Request-ID', req.requestId);
+    attachToLogger: function attachToLogger(propName) {
+      return function(req, res, next) {
+        var obj = {};
+        obj[propName] = req[propName];
+        req.logger = req.logger.child(obj);
         next();
       };
-    },
-    attachTimeToReq: function attachTimeToReq(req, res, next) {
-      req.startTime = Date.now();
-      next();
     },
     logErrors: function errorLogger(err, req, res, next) {
       req.logger.error({req: req, err: err}, 'Error');
@@ -103,7 +93,7 @@ module.exports = function(opts) {
     logResponses: function responseLogger(req, res, next) {
       res.on('finish', function() {
         req.logger.info(
-          {req: req, res: res, responseTimeMS: Date.now() - req.startTime},
+          {req: req, res: res},
           'Response finished'
         );
       });

@@ -18,10 +18,13 @@ var express = require('express'),
   });
 
 var app = express();
-app.use(logging.attachTimeToReq);
-app.use(logging.attachLoggerToReq);
-app.use(logging.attachRequestIdToReq());
+app.use(logging.attachLoggerToReq); // adds req.logger
 app.use(logging.logResponses);
+app.use(function(req, res, next) {
+  req.thing = 'otherThing';
+  next();
+});
+app.use(logging.attachToLogger('thing')); // {thing: 'otherThing'} is now added to future req.logger calls
 app.get('/', function(req, res) {
   res.send('Hello!');
 });
@@ -36,6 +39,3 @@ The following options are exposed on the context:
 - `streams` - Bunyan streams to write to (takes an array, not a function)
 - `serializers` - (Optional) Additional Bunyan serializers
 - `version` - (Optional) Version object to include in logs
-
-The following option is exposed on the requestId:
-- `warnIfMissingRequestId` - (Optional) Writes a warning to the log if a request is missing an X-Request-ID header

@@ -1,6 +1,6 @@
 {
   "name": "service-logging",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Utilities for service logging",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,6 @@
   "dependencies": {
     "bunyan": "^1.3.5",
     "errio": "^1.2.1",
-    "lodash": "^3.8.0",
-    "node-uuid": "^1.4.3"
+    "lodash": "^3.8.0"
   }
 }
