@@ -16,7 +16,8 @@ function setupServer(ringBuffer, opts) {
     environment: 'dev',
     serializers: opts.serializers,
     streams: [{type: 'raw', stream: ringBuffer}],
-    version: opts.version
+    version: opts.version,
+    stackTrace: opts.stackTrace
   });
   app.use(loggingContext.attachLoggerToReq);
   app.use(loggingContext.logResponses);
@@ -53,6 +54,19 @@ describe('logging', function() {
         var logs = ringBuffer.records;
         assert.equal(logs.length, 2, 'Should be two records');
         assert.equal(logs[0].msg, 'Error');
+        assert.equal(logs[1].msg, 'Response finished');
+        assert.ok(logs[1].requestId === logs[0].requestId);
+      });
+  });
+
+  it('should log errors with stack traces', function() {
+    var ringBuffer = createRingBuffer();
+    return request(setupServer(ringBuffer, {stackTrace: true})).get('/error')
+      .then(function() {
+        var logs = ringBuffer.records;
+        assert.equal(logs.length, 2, 'Should be two records');
+        assert.equal(logs[0].msg, 'Error');
+        assert.notEqual(logs[0].err.stack, undefined, 'Should include stack trace');
         assert.equal(logs[1].msg, 'Response finished');
         assert.ok(logs[1].requestId === logs[0].requestId);
       });
