@@ -8,6 +8,7 @@ var _ = require('lodash'),
  * @param {Object} opts - Options
  * @param {string} opts.environment - A description of the environment
  * @param {string} opts.name - A name for the service
+ * @param {string} opts.stackTrace - Include stack trace via logErrors
  * @param {Object} [opts.serializers] - Serializers for Bunyan
  * @param {Object[]} opts.streams - Bunyan streams for logging
  * @param {Object} [opts.version] - A version object
@@ -30,7 +31,7 @@ module.exports = function(opts) {
   var serializers = _.assign({
     err: function(err) {
       var isLikelyErrorType = err.name && err.message;
-      return isLikelyErrorType ? Errio.toObject(err) : err;
+      return isLikelyErrorType ? Errio.toObject(err, {stack: opts.stackTrace}) : err;
     },
     req: function(req) {
       if (!req || !req.connection) {
