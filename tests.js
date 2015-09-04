@@ -32,6 +32,15 @@ function setupServer(ringBuffer, opts) {
   app.get('/error', function(req, res, next) {
     next(new Error('Error!'));
   });
+  app.get('/error/ca', function(req, res, next) {
+    var error = new Error('Error!');
+    error.response = {
+      request: {
+        _ca: 'a very long string'
+      }
+    };
+    next(error);
+  });
   app.use(loggingContext.logErrors);
   return app;
 }
@@ -69,6 +78,15 @@ describe('logging', function() {
         assert.notEqual(logs[0].err.stack, undefined, 'Should include stack trace');
         assert.equal(logs[1].msg, 'Response finished');
         assert.ok(logs[1].requestId === logs[0].requestId);
+      });
+  });
+
+  it('should not include _ca', function() {
+    var ringBuffer = createRingBuffer();
+    return request(setupServer(ringBuffer)).get('/error/ca')
+      .then(function() {
+        var logs = ringBuffer.records;
+        assert.equal(logs[0].err.response.request._ca, undefined, 'Should not include _ca');
       });
   });
 
