@@ -31,6 +31,9 @@ module.exports = function(opts) {
   var serializers = _.assign({
     err: function(err) {
       var isLikelyErrorType = err.name && err.message;
+      if (err.response && err.response.request) {
+        delete err.response.request._ca;
+      }
       return isLikelyErrorType ? Errio.toObject(err, {stack: opts.stackTrace}) : err;
     },
     req: function(req) {
